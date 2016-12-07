@@ -1,0 +1,75 @@
+################################################################################
+# This file is part of pyNFrac
+# Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+#
+# pyNFrac is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# pyNFrac is distributed in the hope that it will be useful,
+# but WITOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with pyNFrac. If not, see <http://www.gnu.org/licenses/>.
+################################################################################
+
+cmake_minimum_required(VERSION 2.6)
+project(pyNFrac)
+
+# Enable unit testing using CTest
+enable_testing()
+
+# Macro to safely set compiler flags
+macro(add_compiler_flag FLAG FATAL)
+  set(BACKUP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+  try_compile(FLAG_WORKS ${PROJECT_BINARY_DIR}
+                         ${PROJECT_BINARY_DIR}/mintest.cpp)
+  if(NOT FLAG_WORKS)
+    if(${FATAL} STREQUAL "REQUIRED")
+      message(FATAL_ERROR "The compiler does not support the ${FLAG} flag!")
+    else(${FATAL} STREQUAL "REQUIRED")
+      message(STATUS "Not using unsupported compiler flag ${FLAG}.")
+      set(CMAKE_CXX_FLAGS ${BACKUP_CXX_FLAGS})
+    endif(${FATAL} STREQUAL "REQUIRED")
+  endif(NOT FLAG_WORKS)
+endmacro(add_compiler_flag)
+
+# Add minimal cpp file for flag testing
+execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
+                OUTPUT_FILE ${PROJECT_BINARY_DIR}/mintest.cpp)
+
+# Enable C++11
+add_compiler_flag("-std=c++11" REQUIRED)
+
+# Find Boost Python and the Python libraries and interpreter
+find_package(Boost COMPONENTS "python" REQUIRED)
+find_package(PythonLibs 2.7 REQUIRED)
+find_package(PythonInterp 2.7 REQUIRED)
+
+# Find NumPy
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
+                        "import numpy; print numpy.get_include()"
+                RESULT_VARIABLE NUMPY_RESULT
+                OUTPUT_VARIABLE NUMPY_OUTPUT
+                ERROR_VARIABLE NUMPY_ERROR)
+if(NOT NUMPY_RESULT STREQUAL "0")
+  message(FATAL_ERROR "NumPy not found!")
+endif(NOT NUMPY_RESULT STREQUAL "0")
+
+# Set environment
+include_directories(${PROJECT_BINARY_DIR}/src)
+include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${PYTHON_INCLUDE_PATH})
+include_directories(${NUMPY_OUTPUT})
+link_libraries(${Boost_LIBRARIES})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/rundir)
+
+# Add source files
+add_subdirectory(src)
+
+# Add unit tests
+add_subdirectory(test)
