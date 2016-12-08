@@ -41,6 +41,27 @@ macro(add_unit_test)
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
 endmacro(add_unit_test)
 
+macro(add_python_unit_test)
+    set(oneValueArgs NAME)
+    cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
+                               "${multiValueArgs}" ${ARGN})
+    message(STATUS "generating python test " ${TEST_NAME})
+
+    # copy Python test script
+    configure_file(${PROJECT_SOURCE_DIR}/test/${TEST_NAME}
+                   ${PROJECT_BINARY_DIR}/rundir/test/${TEST_NAME} @ONLY)
+    add_test(NAME ${TEST_NAME}
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
+             COMMAND ${PYTHON_EXECUTABLE} ${TEST_NAME})
+
+    set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
+endmacro(add_python_unit_test)
+
+## Configure the load_module script that is used to load the Python library
+set(PYTHON_MODULEPATH ${PROJECT_BINARY_DIR}/rundir)
+configure_file(${PROJECT_SOURCE_DIR}/test/load_module.py.in
+               ${PROJECT_BINARY_DIR}/rundir/test/load_module.py @ONLY)
+
 ### Actual unit test generation ################################################
 ### Add new unit tests below ###################################################
 
@@ -65,6 +86,9 @@ set(TESTNDIMINTERPOLATOR_SOURCES
 )
 add_unit_test(NAME testNDimInterpolator
               SOURCES ${TESTNDIMINTERPOLATOR_SOURCES})
+
+## Unit test for pyNFrac
+add_python_unit_test(NAME test_pyNFrac.py)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################

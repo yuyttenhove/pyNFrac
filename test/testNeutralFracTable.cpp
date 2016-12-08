@@ -26,6 +26,7 @@
 #include "../src/NeutralFracTable.hpp"
 #include "NeutralFracTableDataLocation.hpp"
 
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -83,12 +84,29 @@ int main(int argc, char **argv) {
   table.get_curve(3, 1, 7, 4, Tarr, narr, 351);
   double gasdens = 2.10197728002e-26;
   double fac = rho[4] / gasdens;
+  bool wrong = false;
+  double FeHval = FeH[3];
+  double MgFeval = MgFe[1];
+  double rhoval = rho[4] / fac;
+  double zval = z[7];
   for (unsigned int i = 0; i < 351; ++i) {
-    double nfracH = table.get_neutral_fraction(FeH[3], MgFe[1], rho[4] / fac,
-                                               z[7], Tarr[i]);
-    ofile << Tarr[i] << "\t" << narr[i] << "\t" << nfracH << "\n";
+    double nfracH =
+        table.get_neutral_fraction(FeHval, MgFeval, rhoval, zval, Tarr[i]);
+    ofile << FeHval << "\t" << MgFeval << "\t" << rhoval << "\t" << zval << "\t"
+          << Tarr[i] << "\t" << narr[i] << "\t" << nfracH << "\n";
+    if (std::abs(narr[i] - nfracH) > 1.e-15 * std::abs(narr[i] + nfracH)) {
+      std::cerr << "Error: wrong neutral fraction: " << nfracH << " ("
+                << narr[i] << ", relative difference "
+                << std::abs(narr[i] - nfracH) / std::abs(narr[i] + nfracH)
+                << ")!" << std::endl;
+      wrong = true;
+    }
   }
   ofile.close();
+
+  if (wrong) {
+    return 1;
+  }
 
   return 0;
 }
