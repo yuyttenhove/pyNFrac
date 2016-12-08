@@ -73,3 +73,27 @@ add_subdirectory(src)
 
 # Add unit tests
 add_subdirectory(test)
+
+# Generate documentation
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+  message(STATUS
+          "Doxygen found! You can generate documentation using 'make doc'")
+  # Configure the Doxyfile (sets the correct output path)
+  configure_file(${PROJECT_SOURCE_DIR}/Doxyfile.in
+                 ${PROJECT_BINARY_DIR}/Doxyfile @ONLY)
+  # Add a command that will generate the doxygen documentation
+  add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/doc/html/index.html
+                     COMMAND ${DOXYGEN_EXECUTABLE}
+                             ${PROJECT_BINARY_DIR}/Doxyfile
+                     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                     COMMENT "Generating API documentation with Doxygen"
+                     VERBATIM)
+  # Add a custom target that calls the command defined above
+  add_custom_target(doc DEPENDS ${PROJECT_BINARY_DIR}/doc/html/index.html)
+else(DOXYGEN_FOUND)
+  # Could not find doxygen. Inform the user that documentation will not be
+  # available.
+  message(WARNING "Doxygen not found. 'make doc' will not work!")
+endif(DOXYGEN_FOUND)
+

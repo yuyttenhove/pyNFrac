@@ -30,10 +30,15 @@
 #include <cstdlib>
 #include <iostream>
 
+/*! @brief Number of values for the first test parameter. */
 #define N1 10
+/*! @brief Number of values for the second test parameter. */
 #define N2 10
+/*! @brief Number of values for the third test parameter. */
 #define N3 10
+/*! @brief Number of values for the fourth test parameter. */
 #define N4 10
+/*! @brief Number of values for the fifth test parameter. */
 #define N5 10
 
 /**
