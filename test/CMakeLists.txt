@@ -48,6 +48,8 @@ endmacro(add_unit_test)
 set(TESTNEUTRALFRACTABLE_SOURCES
     testNeutralFracTable.cpp
 
+    ../src/NDimInterpolator.cpp
+    ../src/NDimInterpolator.hpp
     ../src/NeutralFracTable.cpp
     ../src/NeutralFracTable.hpp
 )

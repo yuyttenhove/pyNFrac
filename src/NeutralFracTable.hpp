@@ -60,13 +60,13 @@ private:
   double _dens_array[NEUTRALFRACTABLE_NDENS];
 
   /*! @brief Neutral fraction table. */
-  double _neutralFracTable[NEUTRALFRACTABLE_NTEMP][NEUTRALFRACTABLE_NFEH]
-                          [NEUTRALFRACTABLE_NMGFE][NEUTRALFRACTABLE_NZ]
-                          [NEUTRALFRACTABLE_NDENS];
+  double _neutralFracTable[NEUTRALFRACTABLE_NTEMP * NEUTRALFRACTABLE_NFEH *
+                           NEUTRALFRACTABLE_NMGFE * NEUTRALFRACTABLE_NZ *
+                           NEUTRALFRACTABLE_NDENS];
 
   /*! @brief Density conversion factors. */
-  double _densityConversionFactors[NEUTRALFRACTABLE_NFEH]
-                                  [NEUTRALFRACTABLE_NMGFE];
+  double
+      _densityConversionFactors[NEUTRALFRACTABLE_NFEH * NEUTRALFRACTABLE_NMGFE];
 
 public:
   NeutralFracTable();
@@ -77,6 +77,9 @@ public:
   unsigned int get_curve(unsigned int iFeH, unsigned int iMgFe, unsigned int iz,
                          unsigned int irho, double *Tarr, double *narr,
                          unsigned int size);
+
+  double get_neutral_fraction(double FeH, double MgFe, double rho, double z,
+                              double T);
 };
 
 #endif // NEUTRALFRACTABLE_HPP

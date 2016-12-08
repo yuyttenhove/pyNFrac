@@ -24,8 +24,10 @@
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "NeutralFracTable.hpp"
+#include "NDimInterpolator.hpp"
 #include "NeutralFracTableDataLocation.hpp"
 
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -54,18 +56,33 @@ NeutralFracTable::NeutralFracTable()
             getline(file, line);
             // extract density conversion factor
             std::istringstream lstream(line);
-            lstream >> _densityConversionFactors[iFeH][iMgFe];
+            double gasdens;
+            lstream >> gasdens;
+            _densityConversionFactors[iFeH * NEUTRALFRACTABLE_NMGFE + iMgFe] =
+                _dens_array[irho] / gasdens;
             for (unsigned int itemp = 0; itemp < NEUTRALFRACTABLE_NTEMP;
                  ++itemp) {
               getline(file, line);
               std::istringstream lstream(line);
               lstream >> _temp_array[itemp] >>
-                  _neutralFracTable[itemp][iFeH][iMgFe][iz][irho];
+                  _neutralFracTable
+                      [itemp * NEUTRALFRACTABLE_NFEH * NEUTRALFRACTABLE_NMGFE *
+                           NEUTRALFRACTABLE_NZ * NEUTRALFRACTABLE_NDENS +
+                       iFeH * NEUTRALFRACTABLE_NMGFE * NEUTRALFRACTABLE_NZ *
+                           NEUTRALFRACTABLE_NDENS +
+                       iMgFe * NEUTRALFRACTABLE_NZ * NEUTRALFRACTABLE_NDENS +
+                       iz * NEUTRALFRACTABLE_NDENS + irho];
             }
           } else {
             for (unsigned int itemp = 0; itemp < NEUTRALFRACTABLE_NTEMP;
                  ++itemp) {
-              _neutralFracTable[itemp][iFeH][iMgFe][iz][irho] = 0.;
+              _neutralFracTable
+                  [itemp * NEUTRALFRACTABLE_NFEH * NEUTRALFRACTABLE_NMGFE *
+                       NEUTRALFRACTABLE_NZ * NEUTRALFRACTABLE_NDENS +
+                   iFeH * NEUTRALFRACTABLE_NMGFE * NEUTRALFRACTABLE_NZ *
+                       NEUTRALFRACTABLE_NDENS +
+                   iMgFe * NEUTRALFRACTABLE_NZ * NEUTRALFRACTABLE_NDENS +
+                   iz * NEUTRALFRACTABLE_NDENS + irho] = 0;
             }
           }
         }
@@ -117,8 +134,86 @@ unsigned int NeutralFracTable::get_curve(unsigned int iFeH, unsigned int iMgFe,
   }
   for (unsigned int itemp = 0; itemp < readsize; ++itemp) {
     Tarr[itemp] = _temp_array[itemp];
-    narr[itemp] = _neutralFracTable[itemp][iFeH][iMgFe][iz][irho];
+    narr[itemp] =
+        _neutralFracTable[itemp * NEUTRALFRACTABLE_NFEH *
+                              NEUTRALFRACTABLE_NMGFE * NEUTRALFRACTABLE_NZ *
+                              NEUTRALFRACTABLE_NDENS +
+                          iFeH * NEUTRALFRACTABLE_NMGFE * NEUTRALFRACTABLE_NZ *
+                              NEUTRALFRACTABLE_NDENS +
+                          iMgFe * NEUTRALFRACTABLE_NZ * NEUTRALFRACTABLE_NDENS +
+                          iz * NEUTRALFRACTABLE_NDENS + irho];
   }
 
   return readsize;
+}
+
+/**
+ * @brief Get the neutral fraction for the given parameter values.
+ *
+ * @param FeH [Fe/H] value.
+ * @param MgFe [Mg/Fe] value.
+ * @param rho Density value (in g cm^-3).
+ * @param z Redshift value.
+ * @param T Temperature value (in K).
+ * @return Neutral fraction of hydrogen.
+ */
+double NeutralFracTable::get_neutral_fraction(double FeH, double MgFe,
+                                              double rho, double z, double T) {
+
+  // we don't have data for FeH = 99. and MgFe != 0., since for zero metallicity
+  // the tables are the same.
+  if (FeH == -99.) {
+    MgFe = 0.;
+  }
+
+  double *densparamArrays[2] = {_feh_array, _mgfe_array};
+  unsigned int denstableSize[2] = {NEUTRALFRACTABLE_NFEH,
+                                   NEUTRALFRACTABLE_NMGFE};
+  double densvalues[2] = {FeH, MgFe};
+  int densindex[2] = {-1, -1};
+  double densboxValues[2];
+  double densityConversionFactor = NDimInterpolator::interpolate(
+      _densityConversionFactors, densparamArrays, denstableSize, densvalues, 2,
+      densindex, densboxValues, true);
+  rho *= densityConversionFactor;
+
+  if (T < _temp_array[0]) {
+    if (T < 0.) {
+      std::cerr << "Error: negative temperature given!" << std::endl;
+      abort();
+    }
+    T = _temp_array[0];
+  }
+  if (T > _temp_array[NEUTRALFRACTABLE_NTEMP - 1]) {
+    T = _temp_array[NEUTRALFRACTABLE_NTEMP - 1];
+  }
+
+  if (FeH < _feh_array[0]) {
+    std::cerr << "Error: FeH lower than lowest tabulated value!" << std::endl;
+    abort();
+  }
+
+  if (z < _z_array[0]) {
+    if (z < 0.) {
+      std::cerr << "Error: negative redshift!" << std::endl;
+      abort();
+    }
+    z = _z_array[0];
+  }
+  if (z > _z_array[NEUTRALFRACTABLE_NZ - 1]) {
+    z = _z_array[NEUTRALFRACTABLE_NZ - 1];
+  }
+
+  double *paramArrays[5] = {_temp_array, _feh_array, _mgfe_array, _z_array,
+                            _dens_array};
+  unsigned int tableSize[5] = {NEUTRALFRACTABLE_NTEMP, NEUTRALFRACTABLE_NFEH,
+                               NEUTRALFRACTABLE_NMGFE, NEUTRALFRACTABLE_NZ,
+                               NEUTRALFRACTABLE_NDENS};
+  double values[5] = {T, FeH, MgFe, z, rho};
+  int index[5] = {-1, -1, -1, -1, -1};
+  double boxValues[5] = {-1., -1., -1., -1., -1.};
+
+  return NDimInterpolator::interpolate(_neutralFracTable, paramArrays,
+                                       tableSize, values, 5, index, boxValues,
+                                       false);
 }

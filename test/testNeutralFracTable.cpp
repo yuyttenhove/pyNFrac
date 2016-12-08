@@ -81,9 +81,14 @@ int main(int argc, char **argv) {
   std::ofstream ofile("testcurve.txt");
   double Tarr[351], narr[351];
   table.get_curve(3, 1, 7, 4, Tarr, narr, 351);
+  double gasdens = 2.10197728002e-26;
+  double fac = rho[4] / gasdens;
   for (unsigned int i = 0; i < 351; ++i) {
-    ofile << Tarr[i] << "\t" << narr[i] << "\n";
+    double nfracH = table.get_neutral_fraction(FeH[3], MgFe[1], rho[4] / fac,
+                                               z[7], Tarr[i]);
+    ofile << Tarr[i] << "\t" << narr[i] << "\t" << nfracH << "\n";
   }
+  ofile.close();
 
   return 0;
 }
