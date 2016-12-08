@@ -19,6 +19,10 @@
 cmake_minimum_required(VERSION 2.6)
 project(pyNFrac)
 
+# Set project version
+set(PYNFRAC_VERSION_MAJOR 1)
+set(PYNFRAC_VERSION_MINOR 0)
+
 # Enable unit testing using CTest
 enable_testing()
 
