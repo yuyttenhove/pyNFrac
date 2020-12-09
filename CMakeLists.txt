@@ -49,8 +49,8 @@ execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
 # Enable C++11
 add_compiler_flag("-std=c++11" REQUIRED)
 
-# Find Boost Python and the Python libraries and interpreter
-find_package(Boost COMPONENTS "python" REQUIRED)
+# Find Boost Python and numpy and the Python libraries and interpreter
+find_package(Boost COMPONENTS python numpy REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
 find_package(PythonInterp 2.7 REQUIRED)
 

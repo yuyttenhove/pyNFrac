@@ -32,11 +32,15 @@
 #include <boost/python/def.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/module.hpp>
-#include <boost/python/numeric.hpp>
+#include <boost/python/numpy.hpp>
 
 /*! @brief Tell numpy to use the non deprecated API. */
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/ndarrayobject.h>
+//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
+//#include <numpy/ndarrayobject.h>
+
+namespace p = boost::python;
+namespace np = boost::python::numpy;
 
 /**
  * @brief Get the length of a 1D numpy.ndarray.
@@ -46,16 +50,15 @@
  * @param a numpy.ndarray.
  * @return Size of the 1D array.
  */
-static unsigned int get_size_1D_array(boost::python::numeric::array &a) {
-  boost::python::tuple ashape =
-      boost::python::extract<boost::python::tuple>(a.attr("shape"));
-  const unsigned int adim = boost::python::len(ashape);
-  if (adim != 1) {
-    std::cerr << "Wrong shape for 1D array (dimension = " << adim << ")!"
-              << std::endl;
-    abort();
-  }
-  return boost::python::extract<unsigned int>(ashape[0]);
+static unsigned int get_size_1D_array(np::ndarray &a) {
+    p::tuple ashape = p::extract<p::tuple>(a.attr("shape"));
+    const unsigned int adim = p::len(ashape);
+    if (adim != 1) {
+        std::cerr << "Wrong shape for 1D array (dimension = " << adim << ")!"
+                  << std::endl;
+        abort();
+    }
+    return p::extract<unsigned int>(ashape[0]);
 }
 
 /**
@@ -68,56 +71,61 @@ static unsigned int get_size_1D_array(boost::python::numeric::array &a) {
  * @param z Redshift value.
  * @return numpy.ndarray containing the neutral fractions of hydrogen.
  */
-static boost::python::object
-get_neutral_fractions(boost::python::numeric::array &FeHarr,
-                      boost::python::numeric::array &MgFearr,
-                      boost::python::numeric::array &rhoarr,
-                      boost::python::numeric::array &Tarr, double z) {
-  const unsigned int nFeH = get_size_1D_array(FeHarr);
-  const unsigned int nMgFe = get_size_1D_array(MgFearr);
-  const unsigned int nrho = get_size_1D_array(rhoarr);
-  const unsigned int nT = get_size_1D_array(Tarr);
+static p::object
+get_neutral_fractions(np::ndarray &FeHarr,
+                      np::ndarray &MgFearr,
+                      np::ndarray &rhoarr,
+                      np::ndarray &Tarr, double z) {
+    const unsigned int nFeH = get_size_1D_array(FeHarr);
+    const unsigned int nMgFe = get_size_1D_array(MgFearr);
+    const unsigned int nrho = get_size_1D_array(rhoarr);
+    const unsigned int nT = get_size_1D_array(Tarr);
 
-  if (nFeH != nMgFe || nFeH != nrho || nFeH != nT) {
-    std::cerr << "Not all arrays have the same size: " << nFeH << ", " << nMgFe
-              << ", " << nrho << ", " << nT << "!" << std::endl;
-    abort();
-  }
+    if (nFeH != nMgFe || nFeH != nrho || nFeH != nT) {
+        std::cerr << "Not all arrays have the same size: " << nFeH << ", " << nMgFe
+                  << ", " << nrho << ", " << nT << "!" << std::endl;
+        abort();
+    }
 
-  // we create the ndarray that will store the results
-  npy_intp size = nFeH;
-  PyObject *narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
-  // we need to copy the newly created array, as the original array will be
-  // freed upon return.
-  boost::python::object result = arr.copy();
+//    // we create the ndarray that will store the results
+//    npy_intp size = nFeH;
+//    PyObject * narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
+//    p::handle<> handle(narr);
+//    np::ndarray arr(handle);
+//    // we need to copy the newly created array, as the original array will be
+//    // freed upon return.
+//    p::object result = arr.copy();
 
-  // create the NeutralFracTable
-  NeutralFracTable table;
+    p::tuple shape = p::make_tuple(nFeH);
+    np::ndarray result = np::zeros(shape, np::dtype::get_builtin<double>());
 
-  // now fill the array
-  for (unsigned int i = 0; i < nFeH; ++i) {
-    double FeH = boost::python::extract<double>(FeHarr[i]);
-    double MgFe = boost::python::extract<double>(MgFearr[i]);
-    double rho = boost::python::extract<double>(rhoarr[i]);
-    double T = boost::python::extract<double>(Tarr[i]);
+    // create the NeutralFracTable
+    NeutralFracTable table;
 
-    result[i] = table.get_neutral_fraction(FeH, MgFe, rho, z, T);
-  }
+    // now fill the array
+    for (unsigned int i = 0; i < nFeH; ++i) {
+        double FeH = p::extract<double>(FeHarr[i]);
+        double MgFe = p::extract<double>(MgFearr[i]);
+        double rho = p::extract<double>(rhoarr[i]);
+        double T = p::extract<double>(Tarr[i]);
 
-  return result;
+        result[i] = table.get_neutral_fraction(FeH, MgFe, rho, z, T);
+    }
+
+    return result;
 }
 
 /**
  * @brief Python module exposure.
  */
-BOOST_PYTHON_MODULE(pyNFrac) {
-  // we need to tell Boost we mean numpy.ndarray whenever we write
-  // boost::python::numeric::array
-  boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
-  // we have to kindly ask numpy to initialize its array functionality
-  import_array();
+BOOST_PYTHON_MODULE (pyNFrac) {
+    // we need to tell Boost we mean numpy.ndarray whenever we write
+    // np::ndarray
+    //np::ndarray::set_module_and_type("numpy", "ndarray");
+    // we have to kindly ask numpy to initialize its array functionality
+    //import_array();
 
-  boost::python::def("get_neutral_fractions", &get_neutral_fractions);
+    Py_Initialize();
+    np::initialize();
+    p::def("get_neutral_fractions", &get_neutral_fractions);
 }
