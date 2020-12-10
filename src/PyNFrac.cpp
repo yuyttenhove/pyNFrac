@@ -88,15 +88,7 @@ get_neutral_fractions(np::ndarray &FeHarr,
         abort();
     }
 
-//    // we create the ndarray that will store the results
-//    npy_intp size = nFeH;
-//    PyObject * narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
-//    p::handle<> handle(narr);
-//    np::ndarray arr(handle);
-//    // we need to copy the newly created array, as the original array will be
-//    // freed upon return.
-//    p::object result = arr.copy();
-
+    // we create the ndarray that will store the results
     p::tuple shape = p::make_tuple(nFeH);
     np::ndarray result = np::zeros(shape, np::dtype::get_builtin<double>());
 
@@ -120,12 +112,6 @@ get_neutral_fractions(np::ndarray &FeHarr,
  * @brief Python module exposure.
  */
 BOOST_PYTHON_MODULE (pyNFrac) {
-    // we need to tell Boost we mean numpy.ndarray whenever we write
-    // np::ndarray
-    //np::ndarray::set_module_and_type("numpy", "ndarray");
-    // we have to kindly ask numpy to initialize its array functionality
-    //import_array();
-
     Py_Initialize();
     np::initialize();
     def("get_size_1D_array", get_size_1D_array);

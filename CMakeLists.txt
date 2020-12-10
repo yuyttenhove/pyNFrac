@@ -32,9 +32,15 @@ execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
 # Enable C++11
 add_compiler_flag("-std=c++11" REQUIRED)
 
-# Find python and Boost - both are required dependencies
-find_package(Python COMPONENTS Interpreter Development REQUIRED)
-find_package(Boost COMPONENTS python38 numpy38 REQUIRED)
+# Find python - required dependency
+find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+
+# Find Boost with required components
+set(BOOST_COMPONENTS
+    python3${Python3_VERSION_MINOR}
+    numpy3${Python3_VERSION_MINOR}
+)
+find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 
 # Without this, any build libraries automatically have names "lib{x}.so"
 set(CMAKE_SHARED_MODULE_PREFIX "")
@@ -74,13 +80,3 @@ else(DOXYGEN_FOUND)
     # available.
     message(WARNING "Doxygen not found. 'make doc' will not work!")
 endif(DOXYGEN_FOUND)
-
-# Add a shared module - modules are intended to be imported at runtime.
-# - This is where you add the source files
-#add_library(pyNFrac SHARED src/pyNFrac.cpp src/NDimInterpolator.cpp src/NDimInterpolator.hpp src/NeutralFracTable.cpp src/NeutralFracTable.hpp src/NeutralFracTableDataLocation.hpp)
-
-# Set up the libraries and header search paths for this target
-#target_link_libraries(pyNFrac ${Boost_LIBRARIES})
-#target_include_directories(pyNFrac PRIVATE ${PYTHON_INCLUDE_DIRS})
-
-#set_target_properties( pyNFrac PROPERTIES PREFIX "" OUTPUT_NAME pyNFrac)
