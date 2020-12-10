@@ -52,14 +52,14 @@ macro(add_python_unit_test)
                    ${PROJECT_BINARY_DIR}/rundir/test/${TEST_NAME} @ONLY)
     add_test(NAME ${TEST_NAME}
              WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
-             COMMAND ${Python_EXECUTABLE} ${TEST_NAME})
+             COMMAND ${Python3_EXECUTABLE} ${TEST_NAME})
 
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
 endmacro(add_python_unit_test)
 
 ## Configure the load_module script that is used to load the Python library
 set(PYTHON_MODULEPATH ${PROJECT_BINARY_DIR}/rundir)
-configure_file(${PROJECT_SOURCE_DIR}/test/load_module.py
+configure_file(${PROJECT_SOURCE_DIR}/test/load_module.py.in
                ${PROJECT_BINARY_DIR}/rundir/test/load_module.py @ONLY)
 
 ### Actual unit test generation ################################################

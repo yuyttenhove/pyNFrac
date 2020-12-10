@@ -47,9 +47,9 @@ set(CMAKE_SHARED_MODULE_PREFIX "")
 
 # Set environment
 include_directories(${PROJECT_BINARY_DIR}/src)
-include_directories( ${Python_INCLUDE_DIRS} )
+include_directories( ${Python3_INCLUDE_DIRS} )
 include_directories( ${Boost_INCLUDE_DIR} )
-link_libraries(${Boost_LIBRARIES} ${Python_LIBRARIES})
+link_libraries(${Boost_LIBRARIES} ${Python3_LIBRARIES})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/rundir)
 
 # Add source files
