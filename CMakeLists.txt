@@ -40,10 +40,7 @@ set(BOOST_COMPONENTS
     python3${Python3_VERSION_MINOR}
     numpy3${Python3_VERSION_MINOR}
 )
-find_package(Boost COMPONENTS python38 numpy38 REQUIRED)
-
-# Without this, any build libraries automatically have names "lib{x}.so"
-set(CMAKE_SHARED_MODULE_PREFIX "")
+find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 
 # Set environment
 include_directories(${PROJECT_BINARY_DIR}/src)

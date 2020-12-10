@@ -26,19 +26,10 @@
 
 #include "NeutralFracTable.hpp"
 
-//#include <cstdlib>
+#include <cstdlib>
 #include <iostream>
-
-//#include <boost/python/def.hpp>
-//#include <boost/python/extract.hpp>
-//#include <boost/python/module.hpp>
 #include <boost/python.hpp>
 #include <boost/python/numpy.hpp>
-
-/*! @brief Tell numpy to use the non deprecated API. */
-//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-//#include <numpy/ndarrayobject.h>
 
 namespace p = boost::python;
 namespace np = boost::python::numpy;
