@@ -105,5 +105,5 @@ get_neutral_fractions(np::ndarray &FeHarr,
 BOOST_PYTHON_MODULE (pyNFrac) {
     Py_Initialize();
     np::initialize();
-    def("get_neutral_fractions", get_neutral_fractions);
+    def("get_neutral_fractions", &get_neutral_fractions);
 }
