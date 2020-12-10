@@ -44,10 +44,10 @@ def main():
 
   for i in range(len(nfracH)):
     if abs(nfracH[i] - data[i,5]) > 1.e-5*abs(nfracH[i] + data[i,5]):
-      print "Wrong neutral fraction: {val} ({tval}," \
+      print("Wrong neutral fraction: {val} ({tval}," \
             " relative difference {rdiff})!".format(
         val = nfracH[i], tval = data[i,5],
-        rdiff = abs(nfracH[i] - data[i,5]) / abs(nfracH[i] + data[i,5]))
+        rdiff = abs(nfracH[i] - data[i,5]) / abs(nfracH[i] + data[i,5])))
       sys.exit(1)
 
   sys.exit(0)

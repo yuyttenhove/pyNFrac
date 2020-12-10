@@ -26,12 +26,13 @@
 
 #include "NeutralFracTable.hpp"
 
-#include <cstdlib>
+//#include <cstdlib>
 #include <iostream>
 
-#include <boost/python/def.hpp>
-#include <boost/python/extract.hpp>
-#include <boost/python/module.hpp>
+//#include <boost/python/def.hpp>
+//#include <boost/python/extract.hpp>
+//#include <boost/python/module.hpp>
+#include <boost/python.hpp>
 #include <boost/python/numpy.hpp>
 
 /*! @brief Tell numpy to use the non deprecated API. */
@@ -71,7 +72,7 @@ static unsigned int get_size_1D_array(np::ndarray &a) {
  * @param z Redshift value.
  * @return numpy.ndarray containing the neutral fractions of hydrogen.
  */
-static p::object
+static np::ndarray
 get_neutral_fractions(np::ndarray &FeHarr,
                       np::ndarray &MgFearr,
                       np::ndarray &rhoarr,
@@ -109,7 +110,7 @@ get_neutral_fractions(np::ndarray &FeHarr,
         double rho = p::extract<double>(rhoarr[i]);
         double T = p::extract<double>(Tarr[i]);
 
-        result[i] = table.get_neutral_fraction(FeH, MgFe, rho, z, T);
+            result[i] = table.get_neutral_fraction(FeH, MgFe, rho, z, T);
     }
 
     return result;
@@ -127,5 +128,6 @@ BOOST_PYTHON_MODULE (pyNFrac) {
 
     Py_Initialize();
     np::initialize();
-    p::def("get_neutral_fractions", &get_neutral_fractions);
+    def("get_size_1D_array", get_size_1D_array);
+    def("get_neutral_fractions", get_neutral_fractions);
 }
