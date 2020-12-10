@@ -52,7 +52,7 @@ macro(add_python_unit_test)
                    ${PROJECT_BINARY_DIR}/rundir/test/${TEST_NAME} @ONLY)
     add_test(NAME ${TEST_NAME}
              WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
-             COMMAND ${PYTHON_EXECUTABLE} ${TEST_NAME})
+             COMMAND ${Python3_EXECUTABLE} ${TEST_NAME})
 
     set(TESTNAMES ${TESTNAMES} ${TEST_NAME})
 endmacro(add_python_unit_test)
