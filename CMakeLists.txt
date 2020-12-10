@@ -50,8 +50,27 @@ execute_process(COMMAND echo "int main(int argc, char **argv){ return 0; }"
 # Enable C++11
 add_compiler_flag("-std=c++11" REQUIRED)
 
-# Find python - required dependency
-find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+# Find python and numpy - required dependencies
+if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    message(WARNING "Please consider switching to CMake 3.12.0 or higher")
+    # This is deprecated since cmake 3.12.0...
+    find_package(PythonInterp 3 REQUIRED)
+    find_package(PythonLibs 3 REQUIRED)
+    # find numpy
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+                    RESULT_VARIABLE NUMPY_RESULT
+                    OUTPUT_VARIABLE NUMPY_OUTPUT
+                    ERROR_VARIABLE NUMPY_ERROR)
+    if(NOT NUMPY_RESULT STREQUAL "0")
+        message(FATAL_ERROR "NumPy not found!")
+    endif(NOT NUMPY_RESULT STREQUAL "0")
+    set(Python3_INCLUDE_DIRS ${PYTHON_INCLUDE_PATH})
+    set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
+    set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
+    set(Python3_VERSION_MINOR ${PYTHON_VERSION_MINOR})
+else()
+    find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+endif()
 
 # Find Boost with required components
 set(BOOST_COMPONENTS
