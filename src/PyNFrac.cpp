@@ -28,6 +28,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <cmath>
 #include <boost/python.hpp>
 #include <boost/python/numpy.hpp>
 
@@ -53,6 +54,63 @@ static unsigned int get_size_1D_array(np::ndarray &a) {
     return p::extract<unsigned int>(ashape[0]);
 }
 
+
+/**
+ * @brief Fit of neutral fraction as function of density for CMacIonize results
+ *
+ * @param density double
+ * @return Neutral fraction fit at given density.
+ */
+ double neutral_fraction_fit_cmacionize(double density) {
+    const double a = 1.02113718;
+    const double b = 25.85311811;
+    const double c = 5.0744783;
+    const double d = 132.7388436;
+
+    double x = log10(density);
+    double logistic = 1. / (1+exp(-c*x - d));
+    return pow(10, log10((a*x + b - 1) * (1 - logistic)));
+ }
+
+
+/**
+* @brief Fit of neutral fraction as function of density for unfudged pyNFrac results
+*
+* @param density double
+* @return Neutral fraction fit at given density.
+*/
+double neutral_fraction_fit_pynfrac(double density) {
+    double e = 1.08055993;
+    double f = 26.71134378;
+
+    double log_n_frac = e * log10(density) + f;
+    return pow(10, std::min(0., log_n_frac));
+}
+
+
+/**
+ * @brief Fudge factor to align neutral fraction interpolation with CMacIonize results.
+ *
+ * @param densities numpy.ndarray
+ * @return np.ndarray of fudge factors.
+ */
+ static np::ndarray get_fudge_factors(np::ndarray &densities){
+     const unsigned int length = get_size_1D_array(densities);
+
+     np::ndarray fudge_factor = np::zeros(p::make_tuple(length), np::dtype::get_builtin<double>());
+     for (unsigned int i = 0; i < length; i++) {
+         double density = p::extract<double>(densities[i]);
+         if (density < 1.e-29 || density > 1.e-22) {
+             fudge_factor[i] = 1.;
+         } else {
+             fudge_factor[i] = neutral_fraction_fit_cmacionize(density) / neutral_fraction_fit_pynfrac(density);
+         }
+     }
+
+     return fudge_factor;
+ }
+
+
 /**
  * @brief Get the neutral fractions corresponding to the given parameter values.
  *
@@ -67,7 +125,9 @@ static np::ndarray
 get_neutral_fractions(np::ndarray &FeHarr,
                       np::ndarray &MgFearr,
                       np::ndarray &rhoarr,
-                      np::ndarray &Tarr, double z) {
+                      np::ndarray &Tarr,
+                      double z,
+                      bool fudge = false) {
     const unsigned int nFeH = get_size_1D_array(FeHarr);
     const unsigned int nMgFe = get_size_1D_array(MgFearr);
     const unsigned int nrho = get_size_1D_array(rhoarr);
@@ -93,7 +153,14 @@ get_neutral_fractions(np::ndarray &FeHarr,
         double rho = p::extract<double>(rhoarr[i]);
         double T = p::extract<double>(Tarr[i]);
 
-            result[i] = table.get_neutral_fraction(FeH, MgFe, rho, z, T);
+        result[i] = table.get_neutral_fraction(FeH, MgFe, rho, z, T);
+    }
+
+    if (fudge) {
+        np::ndarray fudge_factors = get_fudge_factors(rhoarr);
+        for (unsigned int i = 0; i < nFeH; ++i) {
+            result[i] = std::min(1., p::extract<double>(result[i]) * p::extract<double>(fudge_factors[i]));
+        }
     }
 
     return result;
