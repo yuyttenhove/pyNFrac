@@ -80,8 +80,8 @@ static unsigned int get_size_1D_array(np::ndarray &a) {
 * @return Neutral fraction fit at given density.
 */
 static double neutral_fraction_fit_pynfrac(double density) {
-    double e = 1.08055993;
-    double f = 26.71134378;
+    double e = 1.08460434;
+    double f = 26.89432033;
 
     double log_n_frac = e * log10(density) + f;
     return pow(10, std::min(0., log_n_frac));
