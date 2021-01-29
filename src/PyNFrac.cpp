@@ -61,7 +61,7 @@ static unsigned int get_size_1D_array(np::ndarray &a) {
  * @param density double
  * @return Neutral fraction fit at given density.
  */
- double neutral_fraction_fit_cmacionize(double density) {
+ static double neutral_fraction_fit_cmacionize(double density) {
     const double a = 1.02113718;
     const double b = 25.85311811;
     const double c = 5.0744783;
@@ -69,7 +69,7 @@ static unsigned int get_size_1D_array(np::ndarray &a) {
 
     double x = log10(density);
     double logistic = 1. / (1+exp(-c*x - d));
-    return pow(10, log10((a*x + b - 1) * (1 - logistic)));
+    return pow(10, (a*x + b - 1) * (1 - logistic));
  }
 
 
@@ -79,9 +79,9 @@ static unsigned int get_size_1D_array(np::ndarray &a) {
 * @param density double
 * @return Neutral fraction fit at given density.
 */
-double neutral_fraction_fit_pynfrac(double density) {
-    double e = 1.08055993;
-    double f = 26.71134378;
+static double neutral_fraction_fit_pynfrac(double density) {
+    double e = 1.08460434;
+    double f = 26.89432033;
 
     double log_n_frac = e * log10(density) + f;
     return pow(10, std::min(0., log_n_frac));
