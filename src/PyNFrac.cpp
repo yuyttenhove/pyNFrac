@@ -100,7 +100,8 @@ double neutral_fraction_fit_pynfrac(double density) {
      np::ndarray fudge_factor = np::zeros(p::make_tuple(length), np::dtype::get_builtin<double>());
      for (unsigned int i = 0; i < length; i++) {
          double density = p::extract<double>(densities[i]);
-         if (density < 1.e-29 || density > 1.e-22) {
+         double density_cgs = density * 1.98855 / 3.086*3.086*3.086 * 1.e-20;
+         if (density_cgs < 1.e-29 || density_cgs > 1.e-22) {
              fudge_factor[i] = 1.;
          } else {
              fudge_factor[i] = neutral_fraction_fit_cmacionize(density) / neutral_fraction_fit_pynfrac(density);
